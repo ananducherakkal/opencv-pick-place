@@ -1,0 +1,123 @@
+MODULE MainModule
+	TASK PERS tooldata calib:=[TRUE,[[1.07776,3.21144,253.103],[1,0,0,0]],[1,[0,0,0],[1,0,0,0],0,0,0]];
+	CONST robtarget origin:=[[109.84,6.30,-4.23],[0.0367047,0.0346975,0.998603,0.0155296],[-1,0,-1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget safe:=[[82.34,139.87,184.93],[0.0367172,0.0347086,0.998602,0.0155312],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget drop:=[[171.64,-84.02,1.35],[0.0367112,0.0347011,0.998602,0.0155317],[-1,0,-1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	VAR string client_message;
+	VAR string Server_message;
+    VAR num x;
+    VAR num y;
+    VAR num angle;
+    VAR num type;
+    VAR bool ok;
+    VAR num index;
+    VAR num input;
+    VAR num numOfElips;
+    TASK PERS tooldata Toolgripper:=[TRUE,[[-94.9763,0.581815,188.162],[1,0,0,0]],[1.1,[0,20,25],[1,0,0,0],0,0,0]];
+    TASK PERS wobjdata wobjgripper:=[FALSE,TRUE,"",[[396.495,-119.501,-2.61644],[1,1.12225E-05,-4.14814E-06,-1.50319E-05]],[[0,0,0],[1,0,0,0]]];
+    CONST robtarget safe10:=[[35.83,591.13,48.93],[0.0264094,-0.131876,0.990835,-0.0125228],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget safe20:=[[90.73,207.71,157.69],[0.0263591,-0.131922,0.99083,-0.0125183],[0,-1,-1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget safe30:=[[4.23,-1.79,0.44],[0.0263702,-0.131901,0.990833,-0.0124998],[-1,-1,-1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget safe40:=[[-8.55,354.66,234.54],[0.0262293,-0.133297,0.990653,-0.0122718],[0,-1,-1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget safe50:=[[-48.11,527.50,63.46],[0.0262401,-0.133278,0.990656,-0.0122136],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget newdrop:=[[76.98,571.58,3.42],[0.0262428,-0.13188,0.990839,-0.012518],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget origin10:=[[199.68,1.02,-281.61],[0.984751,-0.0113179,0.00903284,-0.173369],[0,0,1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget safe60:=[[-99.70,204.37,-6.06],[0.984747,-0.0112995,0.009032,-0.173389],[-1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    
+    PROC main()
+        !MoveJ origin,v100,fine,Toolgripper\WObj:=wobjgripper;
+        !WHILE TRUE DO
+        !    TPReadNum input, "Enter rotation";
+        !    MoveJ  RelTool (safe40, 0, 0, 0 \Rz:= input), v100, fine, Toolgripper\WObj:=wobjgripper;
+        !ENDWHILE
+        TPErase;
+        RobotAsClientConnect;
+        TPWrite "Started";
+        TPReadFK input, "Choose color", stEmpty, "Red", "Green", "Blue", "All";
+        IF input = 2 THEN
+            RobotClienSendMessage "red";
+        ELSEIF input = 3 THEN
+            RobotClienSendMessage "green";
+        ELSEIF input = 4 THEN
+            RobotClienSendMessage "blue";
+        ELSE
+            RobotClienSendMessage "all";
+        ENDIF
+        Server_message:= RobotClientReciveMessage();
+        
+        TPReadFK input, "Choose shape", stEmpty, "Ellipse", "Hexagon", "Rectangle", "All";
+        IF input = 2 THEN
+            RobotClienSendMessage "ellipse";
+        ELSEIF input = 3 THEN
+            RobotClienSendMessage "hexagon";
+        ELSEIF input = 4 THEN
+            RobotClienSendMessage "rectangle";
+        ELSE
+            RobotClienSendMessage "all";
+        ENDIF
+        
+        numOfElips := 0;
+        type := 0;
+        x := 0;
+        y := 0;
+        angle := 0;
+        index := 0;
+        WHILE TRUE DO
+            WHILE type < 3 DO
+                Server_message:= RobotClientReciveMessage();
+                IF Server_message = "execute" THEN
+                    type := 4;
+                ELSE
+                    IF type = 0 THEN
+                        ok := StrToVal(Server_message, x);
+                        x := x - 5;
+                        type := type + 1;
+                    ELSEIF type = 1 THEN
+                        ok := StrToVal(Server_message, y);
+                        type := type + 1;
+                    ELSE
+                        ok := StrToVal(Server_message, angle);
+                        TPWrite "x: " + ValToStr(x) + ", y: " + ValToStr(y) + ", angle: " + ValToStr(angle);
+                        TPReadFK input, "Execute?", stEmpty, stEmpty, stEmpty, "Yes", "No";
+                        IF input <> 4 THEN
+                            stopExec;
+                        ENDIF
+                        pickAndPlace;
+                        type := 0;
+                        numOfElips := numOfElips + 1;
+                    ENDIF
+                    RobotClienSendMessage "Continue";
+                ENDIF
+            ENDWHILE
+            TPReadFK input, "Continue?", stEmpty, stEmpty, stEmpty, "Yes", "No";
+            RobotClienSendMessage "Done";
+            IF input <> 4 THEN
+                stopExec;
+            ENDIF
+        ENDWHILE
+    ENDPROC
+    
+    PROC stopExec ()
+        RobotClientCloseAndDisconnect;
+        Stop;
+    ENDPROC
+    
+    PROC pickAndPlace ()
+        !MoveL safe30, v100, z100, Toolgripper\WObj:=wobjgripper;
+        MoveJ safe,v100,fine,Toolgripper\WObj:=wobjgripper;
+        MoveL Offs(origin, x, y, 100),v100,fine,Toolgripper\WObj:=wobjgripper;
+        MoveL Offs(origin, x, y, 0),v100,fine,Toolgripper\WObj:=wobjgripper;
+        WaitTime 1;
+        Set doValve1;
+        WaitTime 1;
+        MoveL Offs(origin, x, y, 100),v100,fine,Toolgripper\WObj:=wobjgripper;
+        MoveL Offs(drop, 0, 0, 100),v100,fine,Toolgripper\WObj:=wobjgripper;
+        MoveL RelTool (drop, 0, 0,  -(3 * numOfElips) \Rz:= angle),v100,fine,Toolgripper\WObj:=wobjgripper;
+        WaitTime 1;
+        Reset doValve1;
+        WaitTime 1;
+        MoveL Offs(drop, 0, 0, 100),v100,fine,Toolgripper\WObj:=wobjgripper;
+        MoveJ safe,v100,fine,Toolgripper\WObj:=wobjgripper;
+    ENDPROC
+    
+ENDMODULE

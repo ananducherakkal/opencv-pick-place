@@ -1,0 +1,41 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+env/
+ENV/
+.env
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+.egg-info/
+*.egg
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# C extensions
+*.so
+
+# Temporary files
+*.tmp
+*.temp
+
+# Other files to ignore
+*.DS_Store
+Thumbs.db
